@@ -1,0 +1,6 @@
+**/*.o
+**/*.mod
+**/fgensln
+**/*.a
+**/*.txt
+runsolver
