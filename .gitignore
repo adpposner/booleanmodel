@@ -1,6 +1,10 @@
 **/*.o
+**/main
 **/*.mod
 **/fgensln
 **/*.a
 **/*.txt
+**/.vscode
+*.params
+*.matrices
 runsolver

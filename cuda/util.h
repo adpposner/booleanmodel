@@ -25,25 +25,20 @@
  * NOTE: making NMESS <= 127 makes a HUGE difference
  */
 #define NMESS   130
-#define NMICMAX  40  
+#define NMICMAX  81  
 #define NDNAM    (NMESS + NMICMAX)
 // #define TPB 256
 #define WARP_SIZE_DEFAULT_RP    32
 #define NSTATES (NMESS+1)
 #define TRANSMATDATASIZE NSTATES * NSTATES
-#define NMICROMIN 0
-#define NMICROMAX 32
-#define NMICROSTEP 10
-#define NSTEPS 1+((NMICROMAX - NMICROMIN)/NMICROSTEP)
 
-#define MESSMAX_SOLVED  151
 
 //Really important number - specifies the number of IC vectors with k 1's and nMess+1 - k 0's
 //For low/high k's, most will be repeated but that's okay
 //Must be high to see less common events
-#define NVPO    5000
+#define NVPO    1000
 //Also very important, number of networks to test for given parameter sets
-#define NUM_NETS_PER_PARAMSET   1000
+#define NUM_NETS_PER_PARAMSET   100
 
 //const int Cmat_mem_size = NMESS*NDNAM*sizeof(int);
 const int Lmat_mem_size = NMESS*NMICMAX*sizeof(float);

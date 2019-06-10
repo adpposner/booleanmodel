@@ -150,7 +150,7 @@ void allocateSystem(curandStateMRG32k3a_t ** d_rand, int ** d_ics, int ** d_tran
 }
 
 ///
-void initSystemParameters(const System_Parameters * myParams,dim3 dGrid, dim3 dBlock, curandStateMRG32k3a_t * const d_rand, 
+int initSystemParameters(const System_Parameters * myParams,dim3 dGrid, dim3 dBlock, curandStateMRG32k3a_t * const d_rand, 
  int * const d_transmats, int * const h_transmats, OpsData * const devOps) 
 {
     #ifdef TIME_KERNELS_RP
@@ -166,6 +166,7 @@ void initSystemParameters(const System_Parameters * myParams,dim3 dGrid, dim3 dB
     run_mat_gen_kernel(d_rand,devOps,dGrid,dBlock);
     }else{
         fprintf(stderr,"nMicro exceeds NMICMAX, skipping item %d - %d\n",myParams->nMicro,NMICMAX);
+        return 1;
     }
     #ifdef TIME_KERNELS_RP
     checkCuda(cudaEventRecord(stop));
@@ -176,7 +177,7 @@ void initSystemParameters(const System_Parameters * myParams,dim3 dGrid, dim3 dB
     checkCuda(cudaEventDestroy(stop));
     printf("setup System took %f s\n",millis/1000.0f);
     #endif
-
+    return 0;
 }
 
 ///
@@ -214,7 +215,7 @@ int * d_transmats,int myNMicro){
 
 extern "C" int loop(dim3 dGrid, dim3 dBlock, curandStateMRG32k3a_t * const d_rand, 
 int * const d_ics, int * const d_transmats, int * const h_transmats, OpsData * const devOps){
-     
+     int status;
     System_Parameters * pcurr = nextParameters();
     if (pcurr == NULL){
         fprintf(stderr,"Params are null, maybe EOF?\n");
@@ -225,11 +226,13 @@ int * const d_ics, int * const d_transmats, int * const h_transmats, OpsData * c
     }
     //This does regen networks when nMicro changes, could be made a bit faster by retaining networks
     //when only nmicro changes or only pzero/pone change
-    initSystemParameters(pcurr,dGrid, dBlock, d_rand, d_transmats, h_transmats, devOps);
-    step_kern(dGrid,dBlock,d_rand,devOps,d_ics,d_transmats,pcurr->nMicro);
-    checkCuda(cudaPeekAtLastError());
-    checkCuda(cudaDeviceSynchronize());
-    checkCuda(cudaMemcpy(h_transmats,d_transmats,dGrid.x*TRANSMATDATASIZE*sizeof(*d_transmats),cudaMemcpyDeviceToHost));
+    status = initSystemParameters(pcurr,dGrid, dBlock, d_rand, d_transmats, h_transmats, devOps);
+    if (status == 0){
+        step_kern(dGrid,dBlock,d_rand,devOps,d_ics,d_transmats,pcurr->nMicro);
+        checkCuda(cudaPeekAtLastError());
+        checkCuda(cudaDeviceSynchronize());
+        checkCuda(cudaMemcpy(h_transmats,d_transmats,dGrid.x*TRANSMATDATASIZE*sizeof(*d_transmats),cudaMemcpyDeviceToHost));
+    }
     writeData(h_transmats,dGrid.x);
     return 0;
 }
@@ -264,7 +267,6 @@ int main(int argc, const char * argv[]){
     }
     int status;
     //setup
-    printf("okay\n");
     openInputOutputFiles(argv[1],argv[2]);
     allocateSystem(&d_randStates,&d_ics,&d_transmats,&h_transmats,&device_Ops,dGrid,dBlock,myseed);
     //loop
