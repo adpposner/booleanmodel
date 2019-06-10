@@ -5,7 +5,7 @@ Created on Sun Jun  9 15:38:41 2019
 
 @author: russell
 """
-
+import sys
 import numpy as np
 
 def getFileData(prefix):
@@ -85,3 +85,7 @@ def main(prefix):
     condentcols="\t".join(["condent_{0}".format(c) for c in np.arange(matrices.shape[1])])
     hdr = header + "\t" + condentcols
     np.savetxt(prefix+".processed.txt",outdata,delimiter='\t',header=hdr,fmt='%1.6f')
+
+if __name__ == "__main__":
+    pfx = sys.argv[1]
+    main(pfx)
